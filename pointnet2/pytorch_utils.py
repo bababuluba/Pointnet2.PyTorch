@@ -18,6 +18,7 @@ class SharedMLP(nn.Sequential):
         super().__init__()
 
         for i in range(len(args) - 1):
+            print("({})conv2d:in{}out{}".format(i, args[i], args[i+1]))
             self.add_module(
                 name + 'layer{}'.format(i),
                 Conv2d(

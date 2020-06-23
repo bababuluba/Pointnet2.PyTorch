@@ -26,22 +26,26 @@ class _PointnetSAModuleBase(nn.Module):
             new_features: (B, npoint, \sum_k(mlps[k][-1])) tensor of the new_features descriptors
         """
         new_features_list = []
-
+        print("samodule xyz shape in:{}; ".format(xyz.shape))
         xyz_flipped = xyz.transpose(1, 2).contiguous()
         if new_xyz is None:
             new_xyz = pointnet2_utils.gather_operation(
                 xyz_flipped,
                 pointnet2_utils.furthest_point_sample(xyz, self.npoint)
             ).transpose(1, 2).contiguous() if self.npoint is not None else None
+        print("samodule new xyz shape in:{}; ".format(new_xyz.shape))
 
         for i in range(len(self.groupers)):
             new_features = self.groupers[i](xyz, new_xyz, features)  # (B, C, npoint, nsample)
+            print("samodule grouper new feature shape in:{}; ".format(new_features.shape))
 
             new_features = self.mlps[i](new_features)  # (B, mlp[-1], npoint, nsample)
+            print("samodule mlp new shape in:{}; ".format(new_features.shape))
             if self.pool_method == 'max_pool':
                 new_features = F.max_pool2d(
                     new_features, kernel_size=[1, new_features.size(3)]
                 )  # (B, mlp[-1], npoint, 1)
+                print("samodule pooling new feature shape in:{}; ".format(new_features.shape))
             elif self.pool_method == 'avg_pool':
                 new_features = F.avg_pool2d(
                     new_features, kernel_size=[1, new_features.size(3)]
@@ -51,6 +55,8 @@ class _PointnetSAModuleBase(nn.Module):
 
             new_features = new_features.squeeze(-1)  # (B, mlp[-1], npoint)
             new_features_list.append(new_features)
+        print("samodule new xyz shape in:{}; ".format(new_xyz.shape))
+        print("samodule new feature shape in:{}; ".format(torch.cat(new_features_list, dim=1).shape))
 
         return new_xyz, torch.cat(new_features_list, dim=1)
 

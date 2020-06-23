@@ -62,7 +62,7 @@ class Pointnet2MSG(nn.Module):
         cls_layers.append(pt_utils.Conv1d(pre_channel, 1, activation=None))
         cls_layers.insert(1, nn.Dropout(0.5))
         self.cls_layer = nn.Sequential(*cls_layers)
-
+        print("POINT@MSG")
     def _break_up_pc(self, pc):
         xyz = pc[..., 0:3].contiguous()
         features = (
@@ -80,7 +80,8 @@ class Pointnet2MSG(nn.Module):
             li_xyz, li_features = self.SA_modules[i](l_xyz[i], l_features[i])
             l_xyz.append(li_xyz)
             l_features.append(li_features)
-
+            print("l_xyz:{}".format(li_xyz.shape()))
+            print("l_feature:{}".format(li_features.shape()))
         for i in range(-1, -(len(self.FP_modules) + 1), -1):
             l_features[i - 1] = self.FP_modules[i](
                 l_xyz[i - 1], l_xyz[i], l_features[i - 1], l_features[i]
